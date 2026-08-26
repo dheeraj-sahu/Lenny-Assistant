@@ -1,0 +1,98 @@
+# docker-compose.yml
+# One-command startup for all five services.
+# Usage: docker-compose up --build
+#
+# Services:
+#   postgres  — PostgreSQL database
+#   qdrant    — Vector database
+#   ollama    — Local LLM runtime (Anthropic-compatible endpoint)
+#   backend   — FastAPI application
+#   frontend  — React (Vite) application
+#
+# After first startup, pull the Ollama model:
+#   docker exec lenny-ollama ollama pull llama3.1:8b
+
+
+networks:
+  lenny-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  qdrant-data:
+  transcripts-data:
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: lenny-postgres
+    restart: unless-stopped
+    env_file: ./backend/.env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - lenny-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lenny}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Qdrant Vector DB ────────────────────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:v1.9.2
+    container_name: lenny-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant-data:/qdrant/storage
+    ports:
+      - "6333:6333"   # REST API
+      - "6334:6334"   # gRPC
+    networks:
+      - lenny-net
+
+
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    container_name: lenny-backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - QDRANT_HOST=qdrant
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-lenny}:Ankitkr%401234@postgres:5432/${POSTGRES_DB:-lenny_assistant}
+    volumes:
+      - transcripts-data:/app/data/transcripts
+    ports:
+      - "8000:8000"
+    networks:
+      - lenny-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+
+  # ── React Frontend ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lenny-frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    ports:
+      - "5173:5173"
+    networks:
+      - lenny-net
+    depends_on:
+      - backend
