@@ -39,7 +39,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",")]
+        return [
+            origin
+            for origin in (item.strip() for item in self.cors_origins.split(","))
+            if origin
+        ]
 
     # ── LLM Provider ────────────────────────────────────────────
     llm_provider: LLMProvider = LLMProvider.OLLAMA
