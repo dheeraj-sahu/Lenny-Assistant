@@ -59,7 +59,7 @@ ollama pull qwen2.5:1.5b
 
 ```powershell
 git clone <your-repo-url>
-cd take_home_assignment
+cd <cloned-directory>
 ```
 
 Copy the example environment file and fill in your values:
@@ -173,9 +173,8 @@ take_home_assignment/
 │   └── pyproject.toml
 ├── frontend/
 │   ├── src/
-│   │   ├── api/        # API client (sessions, messages, artifacts, config)
+│   │   ├── api/        # API clients (sessions, messages, artifacts)
 │   │   ├── components/ # Chat, Sidebar, ArtifactViewer, ProviderBadge
-│   │   ├── hooks/      # useSession, useMessageStream, useArtifact
 │   │   └── styles/     # Global CSS design system
 │   └── vite.config.ts
 ├── docs/
