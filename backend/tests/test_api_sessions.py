@@ -57,9 +57,18 @@ async def test_create_session(test_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_create_session_with_title(test_client: AsyncClient):
     """POST /api/v1/sessions with a title should set the title."""
-    response = await test_client.post("/api/v1/sessions", json={"title": "My test session"})
+    response = await test_client.post(
+        "/api/v1/sessions", json={"title": "  My test session  "}
+    )
     assert response.status_code == 201
     assert response.json()["title"] == "My test session"
+
+
+@pytest.mark.asyncio
+async def test_create_session_rejects_blank_title(test_client: AsyncClient):
+    """POST /api/v1/sessions should reject titles containing only whitespace."""
+    response = await test_client.post("/api/v1/sessions", json={"title": "   "})
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio
