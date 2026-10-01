@@ -31,7 +31,7 @@ export const sessionsApi = {
   get: (id: string) => apiFetch<Session>(`/api/v1/sessions/${id}`),
 
   delete: (id: string) =>
-    fetch(`/api/v1/sessions/${id}`, { method: 'DELETE' }),
+    apiFetch<void>(`/api/v1/sessions/${id}`, { method: 'DELETE' }),
 }
 
 export interface ConfigResponse {
