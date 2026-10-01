@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ── Source citation ──────────────────────────────────────────────────────────
@@ -27,6 +27,14 @@ class SourceCitation(BaseModel):
 
 class SendMessageRequest(BaseModel):
     content: str = Field(..., min_length=1, max_length=32_000)
+
+    @field_validator("content")
+    @classmethod
+    def normalize_content(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("content must not be blank")
+        return normalized
 
 
 # ── Response schemas ─────────────────────────────────────────────────────────
