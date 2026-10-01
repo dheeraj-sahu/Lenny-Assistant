@@ -84,6 +84,14 @@ async def test_list_sessions_after_create(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_list_sessions_rejects_invalid_pagination(test_client: AsyncClient):
+    """GET /api/v1/sessions should reject invalid limit and offset values."""
+    for query in ("?limit=0", "?limit=101", "?offset=-1"):
+        response = await test_client.get(f"/api/v1/sessions{query}")
+        assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_get_session_not_found(test_client: AsyncClient):
     """GET /api/v1/sessions/{unknown-id} should return 404."""
     fake_id = "00000000-0000-0000-0000-000000000001"

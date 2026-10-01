@@ -10,7 +10,7 @@ Session CRUD endpoints:
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
@@ -43,8 +43,8 @@ async def create_session(
 
 @router.get("", response_model=SessionListResponse)
 async def list_sessions(
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> SessionListResponse:
     """List all sessions, newest first."""
